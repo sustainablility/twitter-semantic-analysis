@@ -12,13 +12,17 @@ from PIL import Image
 from bs4 import BeautifulSoup
 from time import sleep
 from collections import Counter
+from nltk.tokenize import TweetTokenizer
 from nltk.classify import NaiveBayesClassifier
-from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import train_test_split
-from sklearn import tree
-from sklearn.linear_model import LogisticRegression
-from sklearn import metrics
+from nltk.corpus import twitter_samples
 from textblob import TextBlob
+from random import shuffle
+
+# abstraction:
+# https://www.nltk.org/api/nltk.tokenize.html
+# https://kite.com/python/docs/nltk.TweetTokenizer
+# https://blog.chapagain.com.np/python-nltk-twitter-sentiment-analysis-natural-language-processing-nlp/
+# https://www.kaggle.com/nicewinter/gop-twitter-sentiment-analysis-in-python
 
 # simplest model for analyzing text is to think of it as an unordered list of words
 # known as bag-of-words model
@@ -62,6 +66,8 @@ def main(twtInfo: object):
     ]
     """
     data = pd.read_json(twtInfo, orient="records")
+    pos_tweets = twitter_samples.strings("positive_tweets.json")
+    neg_tweets = twitter_samples.strings("negative_tweets.json")
     # sort values by id, data in json that is in repo is already sorted by id
     data.sort_values(by="3")
     tweets = data["text"]
@@ -78,10 +84,10 @@ def main(twtInfo: object):
     clean_tweets[:] = [re.sub(r"^.*http.*$", '', tweet) for tweet in clean_tweets]
     # remove any non-ascii characters
     clean_tweets[:] = [re.sub(r"[^\x00-\x7F]+", '', tweet) for tweet in clean_tweets]
-    # remove tweeter's RT' tags
-    clean_tweets[:] = [tweet.replace('RT', '') for tweet in clean_tweets]
     # make all words lowercase
     clean_tweets[:] = [tweet.lower() for tweet in clean_tweets]
+    # remove tweeter's RT' tags
+    clean_tweets[:] = [tweet.replace('RT', '') for tweet in clean_tweets]
     # downloads corpus of stopwords (i.e. "the", "did", "?")
     # TODO: check if nltk.stopwords is already downloaded and if it is, then skip
     nltk.download("stopwords")
