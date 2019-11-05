@@ -24,27 +24,6 @@ from random import shuffle
 # https://blog.chapagain.com.np/python-nltk-twitter-sentiment-analysis-natural-language-processing-nlp/
 # https://www.kaggle.com/nicewinter/gop-twitter-sentiment-analysis-in-python
 
-def cleanTweets(tweet):
-    # make lowercase
-    tweet = tweet.lower()
-    # remove all newlines from inside strings
-    tweet = tweet.replace('\n', "").strip()
-    # remove unicode left/right quote characters
-    tweet = tweet.replace(u'\u2018', '\'').replace(u'\u2019', '\'')
-    # convert abbreviations
-    # i.e. couldn't -> could not
-    tweet = tweet.replace("n\'t", " not")
-    # remove any non-ascii characters
-    tweet = re.sub(r"[^\x00-\x7F]+", "", tweet)
-    # remove stock market tickers
-    tweet = re.sub(r"\$\w*", "", tweet)
-    # remove old-school retweet text RT
-    tweet = re.sub(r"^RT[\s]+", "", tweet)
-    # remove hyperlinks
-    tweet = re.sub(r"https?:\/\/.*[\r\n]*", "", tweet)
-    # remove hashtags
-    tweet = re.sub(r"#", "", tweet)
-
 # simplest model for analyzing text is to think of it as an unordered list of words
 # known as bag-of-words model
 # this allows us to infer the category, topic, or sentiment
@@ -52,7 +31,7 @@ def cleanTweets(tweet):
 # in this method we assume that each word is a feature that can either be True or False
 # this is implemented in Python as a dictionary where for each word in a sentence we associate True,
 # if a word is missing, that would be the same as assigning False
-def buildBowFeatures(words):
+def build_bow_features(words):
     return {word:True for word in words}
 
 #fp = "C:/Users/Matt/Documents/GitHub/twitter-sentiment-analysis/"
@@ -93,7 +72,22 @@ def main(twtInfo: object):
     data.sort_values(by="3")
     tweets = data["text"]
     labels = data["sentiment"]
-    clean_tweets = [cleanTweets(tweet) for tweet in tweets]
+    # remove all newlines from inside strings
+    clean_tweets = [tweet.replace('\n', '').strip() for tweet in tweets]
+    # to remove all newline characters and then all leading/trailing whitespaces from the string
+    # note: strip() only removes the specified characters from the very beginning or end of a string, which is why we use replace
+    # remove the unicode for the single left and right quote characters
+    clean_tweets[:] = [tweet.replace(u'\u2018', '\'').replace(u'\u2019', '\'') for tweet in clean_tweets]
+    # convert abbreviations
+    clean_tweets[:] = [tweet.replace("n\'t", " not") for tweet in clean_tweets] # convert n't to not i.e. couldn't -> could not
+    # remove any substring containing http
+    clean_tweets[:] = [re.sub(r"^.*http.*$", '', tweet) for tweet in clean_tweets]
+    # remove any non-ascii characters
+    clean_tweets[:] = [re.sub(r"[^\x00-\x7F]+", '', tweet) for tweet in clean_tweets]
+    # make all words lowercase
+    clean_tweets[:] = [tweet.lower() for tweet in clean_tweets]
+    # remove tweeter's RT' tags
+    clean_tweets[:] = [tweet.replace('RT', '') for tweet in clean_tweets]
     # downloads corpus of stopwords (i.e. "the", "did", "?")
     # TODO: check if nltk.stopwords is already downloaded and if it is, then skip
     nltk.download("stopwords")
@@ -109,10 +103,9 @@ def main(twtInfo: object):
     # tokenize and clean up the whole set of clean tweet texts
     # tc_tweets = tokenized & cleaned tweets
     tc_tweets = []
-    tokenizer = TweetTokenizer(preserve_case=False, strip_handles=False, reduce_len=False)
     for tweet in clean_tweets:
         # creates a list of words for each tweet
-        wordlist = [word for word in tokenizer.tokenize(tweet) if word not in useless_ones]
+        wordlist = [word for word in nltk.word_tokenize(tweet) if word not in useless_ones]
         tc_tweets.append(wordlist)
     # apply stemming algorithm to tweets
     # stemming normalizes text i.e. "waited", "waits", "waiting" -> "wait"
@@ -130,8 +123,8 @@ def main(twtInfo: object):
     # split into train and test set, 90% for training set, 10% for testing set
     train, test = train_test_split(text_label_pair_list, test_size = 0.1, random_state=7)
     # define bag-of-words model and features
-    train_bow = [(buildBowFeatures(tuple[0]), tuple[1]) for tuple in train]
-    test_bow = [(buildBowFeatures(tuple[0]), tuple[1]) for tuple in test]
+    train_bow = [(build_bow_features(tuple[0]), tuple[1]) for tuple in train]
+    test_bow = [(build_bow_features(tuple[0]), tuple[1]) for tuple in test]
     # one of the simplest supervised ML classifiers is the Naive Bayes Classifier
     # TODO: potential new tool would involve different ML classifier
     # it can be trained on 90% of the data to learn what words are associated with pos/neg comments
