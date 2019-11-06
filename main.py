@@ -22,24 +22,7 @@ from random import shuffle
 # https://www.kaggle.com/nicewinter/gop-twitter-sentiment-analysis-in-python
 # https://stackoverflow.com/questions/20827741/nltk-naivebayesclassifier-training-for-sentiment-analysis
 
-def stemTweets(tweetList):
-    sno = nltk.stem.SnowballStemmer("english")
-    retTweetList = []
-    for words in tweetList:
-        stemmed_words = [sno.stem(word) for word in words]
-        retTweetList.append(stemmed_words)
-    return retTweetList
-
-def tokenizeTweets(tweetList):
-    useless_ones = nltk.corpus.stopwords.words("english") + list(string.punctuation)
-    tokenizer = TweetTokenizer(preserve_case=False, strip_handles=False, reduce_len=False)
-    retTweetList = []
-    for tweet in tweetList:
-        wordlist = [word for word in tokenizer.tokenize(tweet) if word not in useless_ones]
-        retTweetList.append(wordlist)
-    return retTweetList
-
-def cleanTweets(tweet):
+def cleanTweet(tweet):
     # make lowercase
     tweet = tweet.lower()
     # remove all newlines from inside strings
@@ -60,6 +43,23 @@ def cleanTweets(tweet):
     # remove hashtags
     tweet = re.sub(r"#", "", tweet)
     return tweet
+
+def tokenizeTweets(tweetList):
+    useless_ones = nltk.corpus.stopwords.words("english") + list(string.punctuation)
+    tokenizer = TweetTokenizer(preserve_case=False, strip_handles=False, reduce_len=False)
+    retTweetList = []
+    for tweet in tweetList:
+        wordlist = [word for word in tokenizer.tokenize(tweet) if word not in useless_ones]
+        retTweetList.append(wordlist)
+    return retTweetList
+
+def stemTweets(tweetList):
+    sno = nltk.stem.SnowballStemmer("english")
+    retTweetList = []
+    for words in tweetList:
+        stemmed_words = [sno.stem(word) for word in words]
+        retTweetList.append(stemmed_words)
+    return retTweetList
 
 # simplest model for analyzing text is to think of it as an unordered list of words
 # known as bag-of-words model
@@ -102,16 +102,12 @@ def main(twtInfo: object):
         ...
     ]
     """
-    data = pd.read_json(twtInfo, orient="records", lines=True)
+    data_tcs_tweets = pd.read_json(twtInfo, orient="records", lines=True)
     nltk.download("twitter_samples")
     pos_tweets = twitter_samples.strings("positive_tweets.json")
     neg_tweets = twitter_samples.strings("negative_tweets.json")
-    # sort values by id, data in json that is in repo is already sorted by id
-    #data.sort_values(by="3")
-    data_tweets = data["text"]
-    clean_data_tweets = [cleanTweets(tweet) for tweet in data_tweets]
-    clean_pos_tweets = [cleanTweets(tweet) for tweet in pos_tweets]
-    clean_neg_tweets = [cleanTweets(tweet) for tweet in neg_tweets]
+    clean_pos_tweets = [cleanTweet(tweet) for tweet in pos_tweets]
+    clean_neg_tweets = [cleanTweet(tweet) for tweet in neg_tweets]
     # downloads corpus of stopwords (i.e. "the", "did", "?")
     # TODO: check if nltk.stopwords is already downloaded and if it is, then skip
     nltk.download("stopwords")
@@ -120,13 +116,11 @@ def main(twtInfo: object):
     nltk.download("punkt")
     # tokenize and clean up the whole set of clean tweet texts
     # tc_tweets = tokenized & cleaned tweets
-    data_tc_tweets = tokenizeTweets(clean_data_tweets)
     pos_tc_tweets = tokenizeTweets(clean_pos_tweets)
     neg_tc_tweets = tokenizeTweets(clean_neg_tweets)
     # apply stemming algorithm to tweets
     # stemming normalizes text i.e. "waited", "waits", "waiting" -> "wait"
     # this cleans the data and makes it easier for the ML algorithm to read it
-    data_tcs_tweets = stemTweets(data_tc_tweets)
     pos_tcs_tweets = stemTweets(pos_tc_tweets)
     neg_tcs_tweets = stemTweets(neg_tc_tweets)
     # pairs each tweet's cleaned text with its sentiment label
