@@ -1,3 +1,20 @@
+from __future__ import division
+import json
+import pandas as pd
+import numpy as np
+import requests
+import nltk
+import string
+import re
+import os
+from os import path
+from time import sleep
+from collections import Counter
+from nltk.tokenize import TweetTokenizer
+from nltk.classify import NaiveBayesClassifier
+from nltk.corpus import twitter_samples
+from random import shuffle
+
 def cleanTweet(tweet):
     # make lowercase
     tweet = tweet.lower()
@@ -50,5 +67,15 @@ def cleanTweet(tweet):
 def main(twtInfo:object):
     data = pd.read_json(twtInfo, orient="records", lines=True)
     data_tweets = data["text"]
+    data_id = data["id"]
     clean_data_tweets = [cleanTweet(tweet) for tweet in data_tweets]
-    return pd.Series(clean_data_tweets).to_json(orient="records")
+    ret = []
+    for i in range(len(data_id)):
+        ret.append({})
+        ret[i]["text"] = clean_data_tweets[i]
+        ret[i]["id"] = data_id[i]
+    return pd.Series(ret).to_json()
+
+dat = main("C:/Users/Matt/Documents/GitHub/twitter-sentiment-analysis/test.json")
+with open("test_clean_out.json", "w+") as out:
+    out.write(dat)
