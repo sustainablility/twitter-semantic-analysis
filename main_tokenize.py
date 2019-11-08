@@ -24,6 +24,12 @@ def tokenizeTweets(tweetList):
         retTweetList.append(wordlist)
     return retTweetList
 
+def tokenizeTweet(tweet):
+    useless_ones = nltk.corpus.stopwords.words("english") + list(string.punctuation)
+    tokenizer = TweetTokenizer(preserve_case=False, strip_handles=False, reduce_len=False)
+    wordlist = [word for word in tokenizer.tokenize(tweet) if word not in useless_ones]
+    return wordlist
+
 def stemTweets(tweetList):
     sno = nltk.stem.SnowballStemmer("english")
     retTweetList = []
@@ -32,13 +38,29 @@ def stemTweets(tweetList):
         retTweetList.append(stemmed_words)
     return retTweetList
 
+def stemTweet(tweet):
+    sno = nltk.stem.SnowballStemmer("english")
+    stemmed_words = [sno.stem(word) for word in tweet]
+    return stemmed_words
+
 def main(twtInfo:object):
-    clean_data_tweets = pd.read_json(twtInfo, orient="records", lines=True)
+    clean_data_tweets = pd.read_json(twtInfo, orient="records")
     nltk.download("stopwords")
     nltk.download("punkt")
-    data_tc_tweets = tokenizeTweets(clean_data_tweets)
-    data_tcs_tweets = stemTweets(data_tc_tweets)
-    return pd.Series(data_tcs_tweets).to_json(orient="records")
+    tweets = clean_data_tweets["text"]
+    data_id = clean_data_tweets["id"]
+    data_tc_tweets = []
+    for tweet in tweets:
+        data_tc_tweets.append(tokenizeTweet(tweet))
+    data_tcs_tweets = []
+    for tweet in data_tc_tweets:
+        data_tcs_tweets.append(stemTweet(tweet))
+    ret = []
+    for i in range(len(data_tcs_tweets)):
+        ret.append({})
+        ret[i]["text"] = data_tcs_tweets[i]
+        ret[i]["id"] = data_id[i]
+    return pd.Series(ret).to_json(orient="records")
 
 dat = main("C:/Users/Matt/Documents/GitHub/twitter-sentiment-analysis/test_clean_out.json")
 with open("test_token_out.json", "w+") as out:

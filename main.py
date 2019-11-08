@@ -73,36 +73,9 @@ def buildBowFeatures(words):
 
 #fp = "C:/Users/Matt/Documents/GitHub/twitter-sentiment-analysis/"
 def main(twtInfo: object):
-    # JSON Schema:
-    """
-    [
-        {
-            "candidate": "No candidate mentioned",
-            "candidate_confidence": 1,
-            "candidate_gold": "",
-            "id": 1,
-            "name": "I_Am_Kenzi",
-            "relevant_yn": "yes",
-            "relevant_yn_confidence": 1,
-            "relevant_yn_gold": "",
-            "retweet_count": 5,
-            "sentiment": "Neutral",
-            "sentiment_confidence": 0.6578,
-            "sentiment_gold": "",
-            "subject_matter": "None of the above",
-            "subject_matter_confidence": 1,
-            "subject_matter_gold": "",
-            "text": "RT @NancyLeeGrahn: How did everyone feel about the Climate Change question last night? Exactly. #GOPDebate",
-            "tweet_coord": "",
-            "tweet_created": "2015-08-07 09:54:46 -0700",
-            "tweet_id": 629697200650592300,
-            "tweet_location": "",
-            "user_timezone": "Quito"
-        },
-        ...
-    ]
-    """
-    data_tcs_tweets = pd.read_json(twtInfo, orient="records", lines=True)
+    data_tcs_tweets = pd.read_json(twtInfo, orient="records")
+    tweets = data_tcs_tweets["text"]
+    data_id = data_tcs_tweets["id"]
     nltk.download("twitter_samples")
     pos_tweets = twitter_samples.strings("positive_tweets.json")
     neg_tweets = twitter_samples.strings("negative_tweets.json")
@@ -134,7 +107,7 @@ def main(twtInfo: object):
     # define bag-of-words model and features
     pos_bow = [(buildBowFeatures(tuple[0]), tuple[1]) for tuple in pos_label_pair_list]
     neg_bow = [(buildBowFeatures(tuple[0]), tuple[1]) for tuple in neg_label_pair_list]
-    data_bow = [buildBowFeatures(text) for text in data_tcs_tweets]
+    data_bow = [buildBowFeatures(text) for text in tweets]
     # one of the simplest supervised ML classifiers is the Naive Bayes Classifier
     # TODO: potential new tool would involve different ML classifier
     # it can be trained on 90% of the data to learn what words are associated with pos/neg comments
@@ -151,5 +124,14 @@ def main(twtInfo: object):
     #return pd.Series(rxt_params).to_json(orient="records")
     #dfPreds = pd.DataFrame(preds)
     #ret = pd.concat([data, dfPreds], axis=1)
-    return pd.Series(preds).to_json(orient="records")
+    ret = []
+    for i in range(len(preds)):
+        ret.append({})
+        ret[i]["text"] = tweets[i]
+        ret[i]["id"] = data_id[i]
+        ret[i]["sentiment"] = preds[i]
+    return pd.Series(ret).to_json(orient="records")
     
+dat = main("C:/Users/Matt/Documents/GitHub/twitter-sentiment-analysis/test_token_out.json")
+with open("test_out.json", "w+") as out:
+    out.write(dat)
