@@ -27,7 +27,3 @@ def main(twtInfo:object):
         ret[i]['text'] = data_tcs_tweets[i]
         ret[i]['id'] = data_id[i]
     return pd.Series(ret).to_json(orient='records')
-
-dat = main("C:/Users/Matt/Documents/GitHub/twitter-sentiment-analysis/test_token_out.json")
-with open("test_porter_out.json", "w+") as out:
-    out.write(dat)
