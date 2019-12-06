@@ -1,19 +1,6 @@
-from __future__ import division
 import json
 import pandas as pd
-import numpy as np
-import requests
 import nltk
-import string
-import re
-import os
-from os import path
-from time import sleep
-from collections import Counter
-from nltk.tokenize import TweetTokenizer
-from nltk.classify import NaiveBayesClassifier
-from nltk.corpus import twitter_samples
-from random import shuffle
 
 def cleanTweet(tweet):
     # make lowercase
@@ -74,8 +61,12 @@ def main(twtInfo:object):
         ret.append({})
         ret[i]["text"] = clean_data_tweets[i]
         ret[i]["id"] = data_id[i]
+<<<<<<< HEAD:main_clean.py
     return pd.Series(ret).to_json(orient="records")
 
 dat = main("test.json")
 with open("test_clean_out.json", "w+") as out:
     out.write(dat)
+=======
+    return pd.Series(ret).to_json(orient="records")
+>>>>>>> 1e17e98119a5a26e4749b372a47c4504bc3ed9d0:Clean.py
