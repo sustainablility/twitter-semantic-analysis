@@ -65,7 +65,7 @@ def cleanTweet(tweet):
     ]
 """
 def main(twtInfo:object):
-    data = pd.read_json(twtInfo, orient="records", lines=True)
+    data = pd.read_json(twtInfo, orient="records")
     data_tweets = data["text"]
     data_id = data["id"]
     clean_data_tweets = [cleanTweet(tweet) for tweet in data_tweets]
@@ -76,6 +76,6 @@ def main(twtInfo:object):
         ret[i]["id"] = data_id[i]
     return pd.Series(ret).to_json(orient="records")
 
-dat = main("C:/Users/Matt/Documents/GitHub/twitter-sentiment-analysis/test.json")
+dat = main("test.json")
 with open("test_clean_out.json", "w+") as out:
     out.write(dat)
